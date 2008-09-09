@@ -8,6 +8,7 @@ class State {
 	def contents = [:]
 	def obstacleState = [:]
 	
+	// allows for an item to be inside multiple containers
 	def put(item, container) {
 		contents.get(container, []).add(item)
 	}
