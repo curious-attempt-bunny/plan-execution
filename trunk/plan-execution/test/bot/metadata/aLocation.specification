@@ -1,0 +1,57 @@
+import bot.plan.Planner
+import bot.plan.GetPlan
+import bot.metadata.World
+import bot.state.State
+import bot.metadata.Location
+import bot.metadata.Item
+
+before "initialise", {
+  world = new World()
+  state = new State(world: world)
+  
+  locA = new Location(name: 'loca')
+  locB = new Location(name: 'locb')
+  
+  world << locA
+  world << locB
+  world << new Item(name: 'key')
+  
+  locA.add("w", locB)
+  locB.add("e", locA)
+}
+
+it "should be 'w' when no door is in the way", {
+  def results = []
+  locA.eachOpenDir(state) { dir, loc -> results << [dir, loc] }
+  results.shouldBe([['w', locB]]) 
+}
+
+it "should be 'open door' when a closed door is in the way", {
+  state.addClosedDoor(locA, "w", locB, "e")
+
+  openDirs().shouldBe([['open door', locB]]) 
+}
+
+def openDirs() {
+  def results = []
+  locA.eachOpenDir(state) { dir, loc -> results << [dir, loc] }
+  results
+}
+
+it "should not be any route when a locked door is in the way", {
+  state.addLockedDoor(locA, "w", locB, "e")
+
+  openDirs().shouldBe([]) 
+}
+
+it "should be a key requirement when a locked door is in the way", {
+  state.addLockedDoor(locA, "w", locB, "e")
+
+  solvableDirs().shouldBe([['open door', locB, state.getObject('key')]]) 
+}
+
+def solvableDirs() {
+  def results = []
+  locA.eachSolvableBlockedDir(state) { dir, loc, required -> results << [dir, loc, required] }
+  results
+}  

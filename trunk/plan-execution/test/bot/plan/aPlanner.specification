@@ -1,0 +1,106 @@
+import bot.plan.Planner
+import bot.plan.GetPlan
+import bot.metadata.World
+import bot.state.State
+import bot.metadata.Location
+import bot.metadata.Item
+
+before "initialise", {
+	world = new World()
+	planner = new Planner(world: world)
+	state = new State(world: world)
+	
+	locA = new Location(name: 'loca')
+	locB = new Location(name: 'locb')
+	locC = new Location(name: 'locc')
+	locD = new Location(name: 'locd')
+  locE = new Location(name: 'loce')
+  
+	world << locA
+	world << locB
+	world << locC
+	world << locD
+	world << locE
+	
+	locB.add("e", locA)
+	locA.add("w", locB)
+	
+	locC.add("n", locB)
+	locB.add("s", locC)
+	
+	locD.add("w", locC)
+	locC.add("e", locD)
+  
+	locD.add("nw", locB)
+	locB.add("se", locD)
+  
+  locE.add("out", locD)
+  locD.add("in", locE)
+  
+	def obj = new Item(name: 'egg')
+	
+	world << obj
+	
+	key = new Item(name: 'key')
+	
+	world << key 
+	
+	state.put(obj, locA)
+	
+	plan = new GetPlan(target:obj)
+}
+
+def planResult() {
+  planner.getCommand(state, plan)
+}
+
+it "should plan to 'get egg' from locA", {
+  state.location = locA
+  planResult().shouldBe "get egg"
+}
+
+it "should plan to 'e' from locB", {
+  state.location = locB
+  planResult().shouldBe "e"
+}
+
+it "should plan to 'n' from locC", {
+  state.location = locC
+  planResult().shouldBe "n"
+}
+
+it "should plan to 'nw' from locD", {
+  state.location = locD
+  planResult().shouldBe "nw"
+}
+
+it "should plan to 'open door' from locB", {
+  state.location = locB
+  state.addClosedDoor(locB, 'e', locA, 'w')
+  planResult().shouldBe "open door"
+}
+
+it "should plan to 'get key' from locB", {
+  state.location = locB
+  state.addLockedDoor(locB, 'e', locA, 'w')
+  state.put(key, locB)
+  
+  planResult().shouldBe "get key"
+}
+
+it "should plan to 'se' from locB (to get the key to open the door)", {
+  state.location = locB
+  state.addLockedDoor(locB, 'e', locA, 'w')
+  state.put(key, locE)
+  
+  planResult().shouldBe "se"
+}
+
+it "should plan to 'se' from locB (to get the key to open the door, without flipping out about the extra key behind the door)", {
+  state.location = locB
+  state.addLockedDoor(locB, 'e', locA, 'w')
+  state.put(key, locA)
+  state.put(key, locE)
+  
+  planResult().shouldBe "se"
+}
