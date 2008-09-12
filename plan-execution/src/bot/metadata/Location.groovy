@@ -26,6 +26,26 @@ class Location {
 		}
 	}
 	
+	def isOpenableDoor(state) {
+		def result = false
+		
+		dirs.each { dir, loc ->
+			if (obstacle[dir] && obstacle[dir].isOpenable(state)) {
+				result = true
+			}
+		}
+		
+		return result
+	}
+	
+	def openDoor(state) {
+        dirs.each { dir, loc ->
+            if (obstacle[dir] && obstacle[dir].isOpenable(state)) {
+            	obstacle[dir].open(state)
+            }
+        }
+    }
+	
 	def eachSolvableBlockedDir(state, closure) {
         dirs.each { dir, loc ->
             if (!obstacle[dir]) {
@@ -36,9 +56,24 @@ class Location {
                 // No Action
             } else {
             	def requiredObject = obstacle[dir].getRequiredObject(state)
-            	println "Required object from $name to $loc.name is $requiredObject.name"
             	closure('open door', loc, requiredObject)
             }
         }
     }
+	
+	def isPassable(state, dir) {
+		if (dirs[dir] && (!obstacle[dir] || obstacle[dir].isOpen(state))) {
+			return true
+		}
+		
+		return false
+	}
+	
+	def getDestination(dir) {
+		dirs[dir]
+	}
+	
+	def String toString() {
+		name
+	}
 }
