@@ -8,9 +8,20 @@ class State {
 	def contents = [:]
 	def obstacleState = [:]
 	
+	def copy() {
+		new State(world:world, location:location, contents:new HashMap(contents), obstacleState:new HashMap(obstacleState))
+	}
+	
 	// allows for an item to be inside multiple containers
 	def put(item, container) {
 		contents.get(container, []).add(item)
+	}
+	
+	def move(item, fromContainer, toContainer) {
+		assert contents[fromContainer].contains(item)
+		assert !contents.get(toContainer,[]).contains(item)
+        contents[fromContainer].remove(item)
+		contents[toContainer].add(item)
 	}
 	
 	def getContents(container) {
@@ -18,7 +29,7 @@ class State {
 	}
 	
 	def getCarrying() {
-		contents.get('self', [])
+		contents.get(getObject('self'), [])
 	}
 	
 	def getObject(name) {

@@ -1,0 +1,92 @@
+import bot.plan.Planner
+import bot.plan.GetPlan
+import bot.metadata.World
+import bot.state.State
+import bot.metadata.Location
+import bot.metadata.Item
+import support.simulator.Simulator
+
+before "init", {
+  world = new World()
+  planner = new Planner(world: world)
+  state = new State(world: world)
+  
+  locA = new Location(name: 'loca')
+  locB = new Location(name: 'locb')
+  locC = new Location(name: 'locc')
+  locD = new Location(name: 'locd')
+  locE = new Location(name: 'loce')
+  
+  world << locA
+  world << locB
+  world << locC
+  world << locD
+  world << locE
+  
+  locB.add("e", locA)
+  locA.add("w", locB)
+  
+  locC.add("n", locB)
+  locB.add("s", locC)
+  
+  locD.add("w", locC)
+  locC.add("e", locD)
+  
+  locD.add("nw", locB)
+  locB.add("se", locD)
+  
+  locE.add("out", locD)
+  locD.add("in", locE)
+  
+  egg = new Item(name: 'egg')
+  
+  world << egg
+  
+  key = new Item(name: 'key')
+  
+  world << key 
+  
+  state.put(egg, locA)
+
+  state.addLockedDoor(locB, 'e', locA, 'w')
+    
+  plan = new GetPlan(target:egg)
+  
+  simulator = new Simulator(world:world, plan:plan)
+}
+
+it "should terminate the simulation carrying the egg (from locA)", {
+  state.location = locA
+  def endState = simulator.run(state)
+  ensure(egg in endState.carrying)
+}
+
+it "should terminate the simulation carrying the egg (from locB, carrying the key)", {
+  state.location = locB
+  state.put(key, state.getObject('self'))
+  ensure(key in state.carrying)
+  def endState = simulator.run(state)
+  ensure(egg in endState.carrying)
+}
+
+it "should terminate the simulation carrying the egg (from locB, next to the key)", {
+  state.location = locB
+  state.put(key, locB)
+  def endState = simulator.run(state)
+  ensure(egg in endState.carrying)
+}
+
+it "should terminate the simulation carrying the egg (from locB, key at locE)", {
+  state.location = locB
+  state.put(key, locE)
+  def endState = simulator.run(state)
+  ensure(egg in endState.carrying)
+}
+
+it "should terminate the simulation carrying the egg (from locB, key at locE, another locked door along shortest route)", {
+  state.location = locB
+  state.put(key, locE)
+  state.addLockedDoor(locB, 'se', locD, 'nw')
+  def endState = simulator.run(state)
+  ensure(egg in endState.carrying)
+}

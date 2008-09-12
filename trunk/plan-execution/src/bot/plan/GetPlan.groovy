@@ -3,6 +3,10 @@ package bot.plan
 class GetPlan {
 	def target
 	
+	def isComplete(state) {
+		return target in state.carrying
+	}
+	
 	def getCommand(world, state) {
 		getCommand(world, state, [])
 	}

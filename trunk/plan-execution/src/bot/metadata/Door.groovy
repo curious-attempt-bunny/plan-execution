@@ -13,6 +13,12 @@ class Door {
         return true
     }
 	
+	def open(state) {
+		if (isOpenable(state)) {
+			state.obstacleState[this] = 'open'
+		}
+	}
+	
 	def getRequiredObject(state) {
 		if (state.obstacleState[this] == 'locked') {
 			return state.getObject('key')
