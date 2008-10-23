@@ -1,0 +1,22 @@
+import bot.metadata.*
+import bot.plan.*
+import bot.state.*
+import support.simulator.*
+
+before "init", {
+  world = new World()
+  planner = new Planner(world: world)
+  state = new State(world: world)
+  
+  new ExitReader().init(world)
+  
+  plan = new GoPlan(target:world.getObject('mspring'))
+  
+  simulator = new Simulator(world:world, plan:plan)  
+}
+
+it "should", {
+  state.location = world.getObject('gnymph')
+  def endState = simulator.run(state)
+  ensure(endState.location.name == 'mspring')
+}
